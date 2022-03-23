@@ -115,7 +115,29 @@ def insert_tweet(connection,tweet):
 
         # create/update the user
         sql = sqlalchemy.sql.text('''
-            ''')
+        INSERT INTO users
+        (id_users, created_at, updated_at, screen_name, name, location, id_urls, description, protected, verified, friends_count, listed_count, favourites_count, statuses_count, witheld_in_countries)
+        VALUES
+        (:id_users, :created_at, :updated_at, :screen_name, :name, :location, :id_urls, :description, :protected,:verified, :friends_count, :listed_count, :favourites_count, :statuses_count, :witheld_in_countries)
+        ON CONFLICT (id_users) DO
+        NOTHING
+    ''')
+        res = connection.execute(sql,{
+            'id_users':tweet['user']['id'],
+            'created_at':tweet['user']['created_at'],
+            'updated_at':tweet['created_at'],
+            'screen_name':remove_nulls(tweet['user']['name']),
+            'location':remove_nulls(tweet['user']['location']),
+            'id_urls':user_id_urls,
+            'description':remove_nulls(tweet['user']['description']),
+            'protected':tweet['user']['protected'],
+            'verified':tweet['user']['verified'],
+            'friends_count':tweet['user']['friends_count'],
+            'listed_count':tweet['user']['listed_count'],
+            'favourites_count':tweet['user']['favourites_count'],
+            'statuses_count':tweet['user']['statuses_count'],
+            'withheld_in_countries':tweet['user'].get('withheld_in_countries', None)
+            })
 
         ########################################
         # insert into the tweets table
@@ -173,11 +195,61 @@ def insert_tweet(connection,tweet):
         # If the id is not in the users table, then you'll need to add it in an "unhydrated" form.
         if tweet.get('in_reply_to_user_id',None) is not None:
             sql=sqlalchemy.sql.text('''
-                ''')
+            INSERT INTO users(id_users, created_at, updated_at, screen_name, name, location, id_urls, description, protected, verified, friends_count, listed_count, favourites_count, statuses_count, withheld_in_countries)
+            VALUES
+            (:id_users, :created_at, :updated_at,:screen_name, :name, :location, :id_urls,:description,:protected,:verified,:friends_count,:listed_count,:favourites_count,:statuses_count,:withheld_in_countries)
+            ON CONFLICT (id_users) DO 
+            NOTHING
+            ''')
+
+            res = connection.execute(sql,{
+            'id_users': tweet.get('in_reply_to_user_id',None),
+            'created_at':None,
+            'updated_at':None,
+            'screen_name':None,
+            'name':None,
+            'location':None,
+            'id_urls':None,
+            'description':None,
+            'protected':None,
+            'verified':None,
+            'friends_count':None,
+            'listed_count':None,
+            'favourites_count':None,
+            'statuses_count':None,
+            'withheld_in_countries':None
+            })
+
 
         # insert the tweet
         sql=sqlalchemy.sql.text(f'''
-            ''')
+        INSERT INTO tweets(id_tweets, id_users, created_at, in_reply_to_status_id, in_reply_to_user_id, quoted_status_id, retweet_count, favorite_count, quote_count, withheld_copyright, withheld_in_countries, source, text, country_code, state_code, lang, place_name, geo)
+        VALUES
+        (:id_tweets, :id_users, :created_at, :in_reply_to_status_id, :in_reply_to_user_id, :quoted_status_id, :retweet_count, :favorite_count, :quote_count, :withheld_copyright, :withheld_in_countries, :source, :text, :country_code, :state_code, :lang, :place_name, ST_GeomFromText(:geo_str || '(' || :geo_coords || ')'))
+        ON CONFLICT (id_users)DO
+        NOTHING
+        ''')
+        res = connection.execute(sql, {
+        'id_tweets': tweet['id'],
+        'id_users': tweet['user']['id'],
+        'created_at': tweet['created_at'],
+        'in_reply_to_status_id':tweet.get('in_reply_to_status_id',None),
+        'in_reply_to_user_id':tweet.get('in_reply_to_user_id',None),
+        'quoted_status_id':tweet.get('quoted_status_id',None),
+        'geo_coords':geo_coords,
+        'geo_str':geo_str,
+        'retweet_count':tweet.get('retweet_count',None),
+        'quote_count':tweet.get('quote_count',None),
+        'favorite_count':tweet.get('favorite_count',None),
+        'withheld_copyright':tweet.get('withheld_copyright',None),
+        'withheld_in_countries':tweet.get('withheld_in_counFtries',None),
+        'source': remove_nulls(tweet.get('source',None)),
+        'text': remove_nulls(text),
+        'country_code': country_code,
+        'state_code': state_code,
+        'lang': tweet.get('lang'),
+        'place_name': place_name
+        })
 
         ########################################
         # insert into the tweet_urls table
