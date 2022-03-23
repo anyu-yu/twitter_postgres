@@ -127,6 +127,7 @@ def insert_tweet(connection,tweet):
             'created_at':tweet['user']['created_at'],
             'updated_at':tweet['created_at'],
             'screen_name':remove_nulls(tweet['user']['name']),
+            'name':remove_nulls(tweet['user']['name']),
             'location':remove_nulls(tweet['user']['location']),
             'id_urls':user_id_urls,
             'description':remove_nulls(tweet['user']['description']),
@@ -264,7 +265,17 @@ def insert_tweet(connection,tweet):
             id_urls = get_id_urls(url['expanded_url'], connection)
 
             sql=sqlalchemy.sql.text('''
-                ''')
+            INSERT INTO tweet_urls(id_tweets, id_urls)
+            VALUES
+            (:id_tweets, :id_urls)
+            ON CONFLICT DO
+            NOTHING
+            ''')
+
+            res = connection.execute(sql, {
+                'id_tweets':tweet['id'],
+                'id_urls':id_urls
+                })
 
         ########################################
         # insert into the tweet_mentions table
@@ -284,11 +295,44 @@ def insert_tweet(connection,tweet):
             # HINT:
             # use the ON CONFLICT DO NOTHING syntax
             sql=sqlalchemy.sql.text('''
+            INSERT INTO users(id_users, created_at, updated_at, screen_name, name, location, id_urls, description, protected, verified, friends_count, listed_count, favourites_count, statuses_count, withheld_in_countries)
+                VALUES
+                (:id_users, :created_at, :updated_at,:screen_name, :name, :location, :id_urls, :description, :protected, :verified, :friends_count, :listed_count, :favourites_count, :statuses_count, :withheld_in_countries)
+                ON CONFLICT (id_users) DO
+                NOTHING
                 ''')
+
+            res = connection.execute(sql,{
+                'id_users': mention['id'],
+                'created_at': None,
+                'updated_at':None,
+                'screen_name':None,
+                'name':None,
+                'location': None,
+                'id_urls': None,
+                'description': None,
+                'protected':None,
+                'verified':None,
+                'friends_count': None,
+                'listed_count':None,
+                'favourites_count':None,
+                'statuses_count': None,
+                'withheld_in_countries': None
+                })
 
             # insert into tweet_mentions
             sql=sqlalchemy.sql.text('''
+            INSERT INTO tweet_mentions(id_tweets, id_users)
+            VALUES
+            (:id_tweets, :id_users)
+            ON CONFLICT DO
+            NOTHING
                 ''')
+
+            res = connection.execute(sql, {
+                'id_tweets':tweet['id'],
+                'id_users':mention['id']
+                })
 
         ########################################
         # insert into the tweet_tags table
@@ -305,7 +349,17 @@ def insert_tweet(connection,tweet):
 
         for tag in tags:
             sql=sqlalchemy.sql.text('''
-                ''')
+            INSERT INTO tweet_tags(id_tweets, tag)
+            VALUES
+            (:id_tweets, :tag)
+            ON CONFLICT (id_tweets, tag) DO
+            NOTHING
+            ''')
+
+            res = connection.execute(sql, {
+                'id_tweets':tweet['id']
+                'tag':tag
+                })
 
         ########################################
         # insert into the tweet_media table
@@ -322,7 +376,18 @@ def insert_tweet(connection,tweet):
         for medium in media:
             id_urls = get_id_urls(medium['media_url'], connection)
             sql=sqlalchemy.sql.text('''
-                ''')
+            INSERT INTO tweet_media(id_tweets, id_urls, type)
+            VALUES
+            (:id_tweets, :id_urls, :type)
+            ON CONFLICT DO
+            NOTHING
+            ''')
+
+            res = connection.execute(sql, {
+                'id_tweets':tweet['id'],
+                'id_urls':id_urls,
+                'type':None
+                })
 
 ################################################################################
 # main functions
