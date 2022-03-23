@@ -116,9 +116,9 @@ def insert_tweet(connection,tweet):
         # create/update the user
         sql = sqlalchemy.sql.text('''
         INSERT INTO users
-        (id_users, created_at, updated_at, screen_name, name, location, id_urls, description, protected, verified, friends_count, listed_count, favourites_count, statuses_count, witheld_in_countries)
+        (id_users, created_at, updated_at, screen_name, name, location, id_urls, description, protected, verified, friends_count, listed_count, favourites_count, statuses_count, withheld_in_countries)
         VALUES
-        (:id_users, :created_at, :updated_at, :screen_name, :name, :location, :id_urls, :description, :protected,:verified, :friends_count, :listed_count, :favourites_count, :statuses_count, :witheld_in_countries)
+        (:id_users, :created_at, :updated_at, :screen_name, :name, :location, :id_urls, :description, :protected,:verified, :friends_count, :listed_count, :favourites_count, :statuses_count, :withheld_in_countries)
         ON CONFLICT (id_users) DO
         NOTHING
     ''')
