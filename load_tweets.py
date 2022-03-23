@@ -227,7 +227,7 @@ def insert_tweet(connection,tweet):
         INSERT INTO tweets(id_tweets, id_users, created_at, in_reply_to_status_id, in_reply_to_user_id, quoted_status_id, retweet_count, favorite_count, quote_count, withheld_copyright, withheld_in_countries, source, text, country_code, state_code, lang, place_name, geo)
         VALUES
         (:id_tweets, :id_users, :created_at, :in_reply_to_status_id, :in_reply_to_user_id, :quoted_status_id, :retweet_count, :favorite_count, :quote_count, :withheld_copyright, :withheld_in_countries, :source, :text, :country_code, :state_code, :lang, :place_name, ST_GeomFromText(:geo_str || '(' || :geo_coords || ')'))
-        ON CONFLICT (id_users)DO
+        ON CONFLICT DO
         NOTHING
         ''')
         res = connection.execute(sql, {
